@@ -2,7 +2,8 @@
 
 This repository contains production-ready implementations for the take-home assignments for the **Junior AI Engineer** role, built using **LangGraph** (`langgraph` >= 1.2, `langchain-core` >= 1.6).
 
-Per the evaluation guidelines (*"There are 3 total at least two assignments need to be submitted"*), this submission provides complete, verified solutions and transcripts for **Assignment 1** and **Assignment 2**.
+Per the evaluation guidelines (*"There are 3 total at least two assignments need to be submitted"*), this submission provides complete, verified solutions and transcripts for **Assignment 1** and **Assignment 2**. 
+# URL-*https://drift-ai-1.streamlit.app/*  
 
 ---
 
