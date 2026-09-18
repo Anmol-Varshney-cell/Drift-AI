@@ -1,6 +1,6 @@
 """
 Main Streamlit Multi-Assignment Portal.
-Allows testing all 3 Junior AI Engineer Assignments in a unified interactive dashboard.
+Interactive demonstration suite for Assignment 1 & Assignment 2 built with LangGraph.
 Deployable as the main file path on Streamlit Community Cloud:
     app.py
 Or run locally:
@@ -21,12 +21,11 @@ st.set_page_config(
 )
 
 st.title("🤖 Autonomous Agent Products — LangGraph Dashboard")
-st.markdown("Interactive demonstration suite for all 3 take-home assignments built with **LangGraph**.")
+st.markdown("Interactive demonstration suite for **Assignment 1** & **Assignment 2** built using **LangGraph**.")
 
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2 = st.tabs([
     "🔬 Assignment 1: Research Agent",
-    "👥 Assignment 2: Multi-Agent Review",
-    "💾 Assignment 3: Resumable Checkpointing"
+    "👥 Assignment 2: Multi-Agent Review"
 ])
 
 # ---------------------------------------------------------
@@ -137,74 +136,3 @@ with tab2:
 
         with st.expander("View Agent A (Worker) Code Submission", expanded=False):
             st.code(res2["worker_code"], language="python")
-
-# ---------------------------------------------------------
-# TAB 3: ASSIGNMENT 3
-# ---------------------------------------------------------
-with tab3:
-    sys.path.append(os.path.join(os.path.dirname(__file__), "assignment-3"))
-    import resumable_agent as a3_ra
-    from dataset import INCIDENT_REPORTS
-
-    st.subheader("Assignment 3: Resumable Agent with Basic Self-Check")
-    st.caption("Processes 4 postmortems sequentially with LangGraph SqliteSaver disk checkpointing & self-check validation.")
-
-    a3_action = st.radio(
-        "Demonstration Scenario:",
-        ["Full Normal Run", "Stop Partway (Interrupted at Item 2)", "Resume from Existing Checkpoint", "Chaos Injection (Corrupt Item INC-103)"],
-        index=0,
-        horizontal=True
-    )
-
-    if st.button("🚀 Run Batch Processing Agent", type="primary", key="btn_a3"):
-        db_path = os.path.join(os.path.dirname(__file__), "assignment-3", "state_checkpoint.db")
-        
-        clear_db = ("Normal" in a3_action or "Stop" in a3_action or "Chaos" in a3_action)
-        if clear_db and os.path.exists(db_path):
-            try:
-                os.remove(db_path)
-            except Exception:
-                pass
-
-        stop_at = 2 if "Stop" in a3_action else None
-        corrupt_id = "INC-103" if "Chaos" in a3_action else None
-
-        graph3 = a3_ra.create_resumable_graph(db_path=db_path)
-        config = {"configurable": {"thread_id": "streamlit_session_thread"}}
-
-        existing = graph3.get_state(config)
-        if existing and existing.values and "Resume" in a3_action:
-            state_in = dict(existing.values)
-            state_in["stop_at_index"] = None
-        else:
-            state_in = {
-                "current_index": 0,
-                "completed_ids": [],
-                "results": {},
-                "check_records": [],
-                "status": "in_progress",
-                "stop_at_index": stop_at,
-                "corrupt_target_id": corrupt_id,
-                "total_llm_calls": 0,
-                "log_messages": []
-            }
-
-        with st.spinner("Processing items and checkpointing..."):
-            res3 = graph3.invoke(state_in, config=config)
-
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Items Processed", f"{len(res3.get('completed_ids', []))} / {len(INCIDENT_REPORTS)}")
-        c2.metric("Execution Status", res3.get("status", "").upper())
-        c3.metric("Total LLM Calls", res3.get("total_llm_calls", 0))
-
-        st.subheader("Processing Log Trace")
-        for log in res3.get("log_messages", []):
-            st.text(log)
-
-        st.subheader("Persisted Checkpoint State")
-        st.json({
-            "current_index": res3.get("current_index"),
-            "completed_ids": res3.get("completed_ids"),
-            "status": res3.get("status"),
-            "results_count": len(res3.get("results", {}))
-        })
